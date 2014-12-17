@@ -1,0 +1,24 @@
+# Carver at NERSC build:
+GA = /global/homes/o/ozog/usr/local/ga-5-2-gcc
+#GA = /global/homes/o/ozog/usr/local/ga-5-2-tau
+BLAS = /global/homes/o/ozog/usr/local/openblas64
+FTOKM = "/global/homes/o/ozog/somefile"
+FTOKD = "/global/homes/o/ozog/datafile"
+
+all:
+	mpicc -g -Wall -fPIC -DFTOKM=\"${FTOKM}\" -DFTOKD=\"${FTOKD}\" -c *.c -I ${GA}/include -I ${BLAS}/include -L${GA}/lib -larmci -lopenblas
+	gfortran -g -fPIC -c -fdefault-integer-8 -I ${GA}/include -L${GA}/lib ga_cluster_info.F -larmci
+	mpicc -g -shared -Wl,-soname,libworkq.so.1 -o libworkq.so.1.0   *.o -L${GA}/lib -L${BLAS}/lib -lga -larmci -lopenblas
+	ln -sf libworkq.so.1.0 libworkq.so.1
+	ln -sf libworkq.so.1.0 libworkq.so
+	
+tau:
+	tau_cc.sh -Wall -fPIC -DFTOKM=\"${FTOKM}\" -DFTOKD=\"${FTOKD}\" -c *.c -I${GA}/include -I${BLAS}/include -L${GA}/lib -L${BLAS}/lib -lga -lTauARMCIWrapper -larmci -lopenblas
+	tau_f77.sh -fPIC -c -fdefault-integer-8 -I${GA}/include -I${BLAS}/include -L${GA}/lib -L${BLAS}/lib ga_cluster_info.F -lga -lTauARMCIWrapper -larmci -lopenblas
+	tau_cc.sh -shared -Wl,-soname,libworkq.so.1 -o libworkq.so.1.0  *.o -L${GA}/lib -L${BLAS}/lib -lga -lTauARMCIWrapper -larmci -lopenblas
+	ln -sf libworkq.so.1.0 libworkq.so.1
+	ln -sf libworkq.so.1.0 libworkq.so
+	
+
+clean:
+	rm -f *.o libworkq* *.inst.* *.pdb
